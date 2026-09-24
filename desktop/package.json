@@ -20,7 +20,11 @@
     "hls",
     "aurastream"
   ],
-  "author": "AuraStream",
+  "author": {
+    "name": "AuraStream",
+    "email": "contato@aurastream.com"
+  },
+  "homepage": "https://github.com/lucasxkazushige/aurastream",
   "license": "MIT",
   "dependencies": {
     "electron-updater": "^6.8.9"
@@ -66,8 +70,7 @@
             "x64"
           ]
         }
-      ],
-      "icon": "build/icon.ico"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -76,22 +79,18 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "AuraStream 4K",
-      "deleteAppDataOnUninstall": false,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico"
+      "deleteAppDataOnUninstall": false
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
-      ],
-      "icon": "build/icon.png"
+      ]
     },
     "mac": {
       "target": [
         "dmg"
-      ],
-      "icon": "build/icon.icns"
+      ]
     }
   }
 }
