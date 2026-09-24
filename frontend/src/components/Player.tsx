@@ -87,6 +87,20 @@ export const Player: React.FC<PlayerProps> = ({
   const leftRef = useRef(false);
 
   const controlsTimeoutRef = useRef<any>(null);
+  const lastMousePosRef = useRef({ x: -1, y: -1 });
+  const isHoveringControlsRef = useRef(false);
+
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
+  const showSpeedMenuRef = useRef(showSpeedMenu);
+  showSpeedMenuRef.current = showSpeedMenu;
+  const showHelpRef = useRef(showHelp);
+  showHelpRef.current = showHelp;
+  const showSubMenuRef = useRef(showSubMenu);
+  showSubMenuRef.current = showSubMenu;
+  const showAudioMenuRef = useRef(showAudioMenu);
+  showAudioMenuRef.current = showAudioMenu;
+
   const title = media.title || media.name || session.title;
 
   // Keep the player isolated from the catalogue and mirror the real fullscreen
@@ -452,16 +466,76 @@ export const Player: React.FC<PlayerProps> = ({
     };
   }, [session.infoHash, session.directStreamUrl, media.id, seasonNumber, episodeNumber, html5Fallback]);
 
-  // Controls Visibility Timer
-  const resetControlsTimer = useCallback(() => {
+  // Controls Visibility Logic
+  const hideControls = useCallback(() => {
+    if (
+      isPlayingRef.current &&
+      !isHoveringControlsRef.current &&
+      !showSpeedMenuRef.current &&
+      !showHelpRef.current &&
+      !showSubMenuRef.current &&
+      !showAudioMenuRef.current
+    ) {
+      setShowControls(false);
+    }
+  }, []);
+
+  const resetControlsTimer = useCallback((delay = 3000) => {
     setShowControls(true);
-    if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying && !showSpeedMenu && !showHelp && !showSubMenu && !showAudioMenu) {
-        setShowControls(false);
+      hideControls();
+    }, delay);
+  }, [hideControls]);
+
+  // When playback state changes: auto-hide if playing, keep visible if paused
+  useEffect(() => {
+    if (isPlaying) {
+      resetControlsTimer(3000);
+    } else {
+      setShowControls(true);
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
       }
-    }, 3500);
-  }, [isPlaying, showSpeedMenu, showHelp, showSubMenu, showAudioMenu]);
+    }
+  }, [isPlaying, resetControlsTimer]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle real mouse movement (ignores synthetic events & sub-pixel jitter)
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const last = lastMousePosRef.current;
+
+    // Ignore synthetic mousemove events where the cursor didn't actually move
+    // and ignore tiny jitter (< 4 pixels)
+    if (last.x !== -1 && Math.abs(clientX - last.x) < 4 && Math.abs(clientY - last.y) < 4) {
+      return;
+    }
+
+    lastMousePosRef.current = { x: clientX, y: clientY };
+    resetControlsTimer(3000);
+  }, [resetControlsTimer]);
+
+  const handleMouseLeave = useCallback(() => {
+    lastMousePosRef.current = { x: -1, y: -1 };
+    isHoveringControlsRef.current = false;
+    if (isPlayingRef.current) {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+      controlsTimeoutRef.current = setTimeout(() => {
+        hideControls();
+      }, 1000);
+    }
+  }, [hideControls]);
 
   // Trigger Center Action Badge
   const triggerCenterAction = (action: 'play' | 'pause' | 'forward' | 'rewind') => {
@@ -787,8 +861,9 @@ export const Player: React.FC<PlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      onMouseMove={resetControlsTimer}
-      onClick={resetControlsTimer}
+      onMouseMove={handleMouseMove}
+      onClick={() => resetControlsTimer(3000)}
+      onMouseLeave={handleMouseLeave}
       className={`fixed inset-0 z-50 bg-black flex items-center justify-center select-none overflow-hidden ${
         !showControls && isPlaying ? 'cursor-none' : 'cursor-default'
       }`}
@@ -963,6 +1038,8 @@ export const Player: React.FC<PlayerProps> = ({
 
       {/* Top Bar Controls (HTML5 / fallback). Native GDI draws its own Netflix chrome. */}
       <div
+        onMouseEnter={() => { isHoveringControlsRef.current = true; resetControlsTimer(60000); }}
+        onMouseLeave={() => { isHoveringControlsRef.current = false; resetControlsTimer(2500); }}
         className={`absolute top-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-b from-black/90 via-black/40 to-transparent z-20 flex items-center justify-between transition-opacity duration-300 ${
           nativeUI
             ? 'opacity-0 pointer-events-none'
@@ -1027,6 +1104,8 @@ export const Player: React.FC<PlayerProps> = ({
 
       {/* Bottom Control Bar (HTML5 / fallback). Native GDI draws its own Netflix chrome. */}
       <div
+        onMouseEnter={() => { isHoveringControlsRef.current = true; resetControlsTimer(60000); }}
+        onMouseLeave={() => { isHoveringControlsRef.current = false; resetControlsTimer(2500); }}
         className={`absolute bottom-0 inset-x-0 p-4 sm:p-6 bg-gradient-to-t from-black/95 via-black/60 to-transparent z-20 space-y-3 transition-opacity duration-300 ${
           nativeUI
             ? 'opacity-0 pointer-events-none'
