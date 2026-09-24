@@ -1,6 +1,6 @@
 {
   "name": "aurastream-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AuraStream 4K Desktop Player com aceleracao de hardware para TV e PC",
   "main": "main.js",
   "scripts": {
