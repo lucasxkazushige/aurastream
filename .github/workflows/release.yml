@@ -38,9 +38,13 @@ jobs:
           dotnet publish desktop/native-player/AuraPlayer.csproj -c Release -r win-x64 --self-contained false -o desktop/native-player/publish
 
       - name: 🐹 Compilar EmbedPlayer (Go)
-        working-directory: desktop
+        working-directory: desktop/embed-player
+        env:
+          CGO_ENABLED: '0'
+          GOOS: 'windows'
+          GOARCH: 'amd64'
         run: |
-          npm run build:player
+          go build -ldflags="-H windowsgui -s -w" -o ../native-player/publish/embedplayer.exe .
 
       - name: 📦 Instalar dependências do desktop
         working-directory: desktop
@@ -56,7 +60,7 @@ jobs:
         working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: npm run release -- --win --publish always
+        run: npm run release:win
 
       - name: 📤 Upload artefatos para o workflow
         uses: actions/upload-artifact@v4
@@ -95,7 +99,7 @@ jobs:
         working-directory: desktop
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
-        run: npm run release -- --linux --publish always
+        run: npm run release:linux
 
       - name: 📤 Upload artefatos para o workflow
         uses: actions/upload-artifact@v4

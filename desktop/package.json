@@ -10,8 +10,8 @@
     "dist:win": "electron-builder --win",
     "dist:linux": "electron-builder --linux",
     "dist:mac": "electron-builder --mac",
-    "release": "electron-builder --win --linux --publish always",
-    "build:player": "cd embed-player && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags=\"-H windowsgui -s -w\" -o ../native-player/publish/embedplayer.exe ."
+    "release:win": "electron-builder --win --publish always",
+    "release:linux": "electron-builder --linux --publish always"
   },
   "keywords": [
     "streaming",
