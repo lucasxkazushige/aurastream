@@ -306,7 +306,7 @@ export const Player: React.FC<PlayerProps> = ({
           timeRef.current = { t, d };
           setCurrentTime(t);
           setDuration(d);
-          if (typeof ev.playing === 'boolean') setIsPlaying(ev.playing);
+          if (ev.playing === true && !isPlayingRef.current) setIsPlaying(true);
           if (d > 15 && Math.floor(t) % 5 === 0) {
             storage.saveProgress({
               media,
@@ -491,16 +491,23 @@ export const Player: React.FC<PlayerProps> = ({
   }, [hideControls]);
 
   // When playback state changes: auto-hide if playing, keep visible if paused
+  const prevIsPlayingRef = useRef(isPlaying);
   useEffect(() => {
-    if (isPlaying) {
-      resetControlsTimer(3000);
-    } else {
-      setShowControls(true);
-      if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current);
+    if (isPlaying !== prevIsPlayingRef.current) {
+      prevIsPlayingRef.current = isPlaying;
+      if (isPlaying) {
+        if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+        controlsTimeoutRef.current = setTimeout(() => {
+          hideControls();
+        }, 3000);
+      } else {
+        setShowControls(true);
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+        }
       }
     }
-  }, [isPlaying, resetControlsTimer]);
+  }, [isPlaying, hideControls]);
 
   // Cleanup timer on unmount
   useEffect(() => {

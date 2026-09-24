@@ -210,6 +210,7 @@ type session struct {
 	muted                      bool
 	fullscreen                 bool
 	chrome                     bool
+	chromeInitial              bool
 	dragging                   bool
 	dragVol                    bool
 	hover                      int
@@ -1017,7 +1018,8 @@ func frameWndProc(hwnd, message, wparam, lparam uintptr) uintptr {
 				s.seeked = true
 			}
 			applyPrefs(s)
-			if total > 0 && !s.chrome {
+			if total > 0 && !s.chromeInitial {
+				s.chromeInitial = true
 				s.showChrome()
 			}
 			emitEvent(map[string]any{
