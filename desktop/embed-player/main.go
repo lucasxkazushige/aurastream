@@ -313,7 +313,27 @@ func isEnglish(name string) bool {
 		strings.Contains(n, "eng") || strings.Contains(n, "original")
 }
 
+func toInt32(v any) int32 {
+	switch n := v.(type) {
+	case int32:
+		return n
+	case int:
+		return int32(n)
+	case int64:
+		return int32(n)
+	case float64:
+		return int32(n)
+	default:
+		return -1
+	}
+}
+
 func applyPrefs() {
+	defer func() {
+		if r := recover(); r != nil {
+			// Safely ignore any transient VLC track reflection errors
+		}
+	}()
 	if prefsDone || vlc == nil || player == 0 {
 		return
 	}
@@ -332,14 +352,14 @@ func applyPrefs() {
 		if prefsAudio == "original" {
 			for _, t := range audio {
 				if isEnglish(fmt.Sprint(t["name"])) {
-					pick = t["id"].(int32)
+					pick = toInt32(t["id"])
 					break
 				}
 			}
 		} else {
 			for _, t := range audio {
 				if isPortuguese(fmt.Sprint(t["name"])) {
-					pick = t["id"].(int32)
+					pick = toInt32(t["id"])
 					break
 				}
 			}
@@ -361,7 +381,7 @@ func applyPrefs() {
 			var pick int32 = -1
 			for _, t := range subs {
 				if isPortuguese(fmt.Sprint(t["name"])) {
-					pick = t["id"].(int32)
+					pick = toInt32(t["id"])
 					break
 				}
 			}

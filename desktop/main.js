@@ -3,13 +3,20 @@ const path = require('path');
 const fs = require('fs');
 const { spawn, execSync } = require('child_process');
 
+// ─── Crash Prevention: Catch all unhandled errors so the app never closes by itself ──
+process.on('uncaughtException', (err) => {
+  console.warn('[Desktop Main] Caught exception to prevent app crash:', err?.message || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.warn('[Desktop Main] Caught unhandled rejection:', reason);
+});
+
 // ─── Auto-Updater (electron-updater via GitHub Releases) ─────────────────────
 let autoUpdater = null;
 try {
   autoUpdater = require('electron-updater').autoUpdater;
-  autoUpdater.autoDownload = true;          // baixa silenciosamente em background
-  autoUpdater.autoInstallOnAppQuit = true;  // instala quando o usuário fechar
-  autoUpdater.logger = require('electron').nativeTheme; // silencia logs no console
+  autoUpdater.autoDownload = true;           // baixa silenciosamente em background
+  autoUpdater.autoInstallOnAppQuit = false;  // NUNCA fechar ou reiniciar o app sozinho!
   autoUpdater.logger = null;
 } catch {
   // electron-updater não disponível em dev/portable — ignora silenciosamente
@@ -19,7 +26,11 @@ try {
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,CanvasOopRasterization,PlatformHEVCDecoderSupport');
+if (process.platform === 'win32') {
+  app.commandLine.appendSwitch('enable-features', 'CanvasOopRasterization,PlatformHEVCDecoderSupport');
+} else {
+  app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder,CanvasOopRasterization,PlatformHEVCDecoderSupport');
+}
 
 let mainWindow;
 
@@ -482,8 +493,19 @@ function startNativePlayer(opts, sender) {
       } catch {}
     }
   };
-  if (child.stdout) child.stdout.on('data', onData);
-  if (child.stderr) child.stderr.on('data', onData);
+  if (child.stdin) {
+    child.stdin.on('error', (err) => {
+      console.warn('[Native Player] Stdin stream error safely handled:', err?.message || err);
+    });
+  }
+  if (child.stdout) {
+    child.stdout.on('data', onData);
+    child.stdout.on('error', () => {});
+  }
+  if (child.stderr) {
+    child.stderr.on('data', onData);
+    child.stderr.on('error', () => {});
+  }
   child.on('exit', () => {
     if (nativePlayerChild === child) nativePlayerChild = null;
     sendNativeEvent({ type: 'stopped' });
@@ -557,6 +579,14 @@ function createWindow() {
     }, 2500);
   });
 
+  // Handle renderer crashes gracefully by auto-reloading
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    console.warn('[Desktop] Render process gone:', details.reason);
+    if (details.reason !== 'clean-exit' && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.reload();
+    }
+  });
+
   // Keyboard navigation for Desktop / TV Mode
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.key === 'F11') {
@@ -623,12 +653,12 @@ app.whenReady().then(() => {
 
     // Verificar atualização 5 segundos depois de abrir (não trava o launch)
     setTimeout(() => {
-      autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+      autoUpdater.checkForUpdates().catch(() => {});
     }, 5000);
 
     // Verificar a cada 4 horas enquanto o app estiver aberto
     setInterval(() => {
-      autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+      autoUpdater.checkForUpdates().catch(() => {});
     }, 4 * 60 * 60 * 1000);
   }
 
