@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body {
+    background-color: #141414;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    width: 100%;
+    min-height: 100%;
+  }
+
+  video::cue {
+    color: #fff;
+    background: rgba(0, 0, 0, 0.78);
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+}
+
+/* Premium player controls: large hit target with a compact visual track. */
+.player-volume::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+
+.player-volume::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+}
+
+:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  background: #000 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-timeline,
+  .player-timeline * {
+    transition: none !important;
+  }
+}
+
+/* Custom TV remote focus styles */
+[data-focused="true"] {
+  outline: 3px solid #E50914 !important;
+  outline-offset: 4px;
+  transform: scale(1.04);
+  box-shadow: 0 10px 25px -5px rgba(229, 9, 20, 0.4), 0 8px 10px -6px rgba(229, 9, 20, 0.4);
+  z-index: 30;
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #141414;
+}
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}

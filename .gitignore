@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Production builds
+dist/
+*/dist/
+release/
+*/release/
+temp/
+*/temp/
+
+# .NET temporary build files
+**/bin/
+**/obj/
+
+# Environment files with sensitive credentials
+.env
+*.env
+.env.*
+!.env.example
+
+# Large pre-compiled download bundles and executables
+*.exe
+*.dll
+downloads/*.zip
+downloads/*.tar.gz
+downloads/*.exe
+downloads/*.AppImage
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*

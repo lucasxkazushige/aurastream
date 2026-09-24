@@ -1,0 +1,15 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CLASSES_ROOT\vlc]
+@="URL:VLC Protocol"
+"URL Protocol"=""
+
+[HKEY_CLASSES_ROOT\vlc\DefaultIcon]
+@="vlc.exe,0"
+
+[HKEY_CLASSES_ROOT\vlc\shell]
+
+[HKEY_CLASSES_ROOT\vlc\shell\open]
+
+[HKEY_CLASSES_ROOT\vlc\shell\open\command]
+@="powershell.exe -WindowStyle Hidden -NoProfile -Command \"$u = '%1' -replace '^vlc://',''; Start-Process vlc $u\""

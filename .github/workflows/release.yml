@@ -1,0 +1,108 @@
+name: 🚀 Build & Release AuraStream Desktop
+
+on:
+  push:
+    tags:
+      - 'v*'          # dispara em qualquer tag tipo v1.0.0, v1.1.0, etc.
+  workflow_dispatch:  # permite disparar manualmente se quiser
+
+permissions:
+  contents: write     # permissão para criar Releases e upload de arquivos
+
+jobs:
+  build-windows:
+    name: 🪟 Windows (NSIS Installer + Portable)
+    runs-on: windows-latest
+
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🐹 Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: 🔷 Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 🔨 Compilar AuraPlayer (LibVLC .NET)
+        run: |
+          dotnet publish desktop/native-player/AuraPlayer.csproj -c Release -r win-x64 --self-contained false -o desktop/native-player/publish
+
+      - name: 🐹 Compilar EmbedPlayer (Go)
+        working-directory: desktop
+        run: |
+          npm run build:player
+
+      - name: 📦 Instalar dependências do desktop
+        working-directory: desktop
+        run: npm install
+
+      - name: 🏗️ Build do frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: 🔨 Build e publicar no GitHub Releases
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: npm run release -- --win --publish always
+
+      - name: 📤 Upload artefatos para o workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.yml
+            desktop/release/*.blockmap
+          retention-days: 7
+
+  build-linux:
+    name: 🐧 Linux (AppImage + DEB)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout código
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Instalar dependências do desktop
+        working-directory: desktop
+        run: npm install
+
+      - name: 🏗️ Build do frontend
+        working-directory: frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: 🔨 Build e publicar no GitHub Releases
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: npm run release -- --linux --publish always
+
+      - name: 📤 Upload artefatos para o workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-release
+          path: |
+            desktop/release/*.AppImage
+            desktop/release/*.deb
+            desktop/release/*.yml
+          retention-days: 7

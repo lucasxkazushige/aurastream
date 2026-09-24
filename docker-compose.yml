@@ -1,0 +1,25 @@
+services:
+  aurastream:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aurastream
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./temp:/app/temp
+      - ./downloads:/app/downloads
+    deploy:
+      resources:
+        limits:
+          cpus: '5.5'
+          memory: 4096M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/api/stream/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

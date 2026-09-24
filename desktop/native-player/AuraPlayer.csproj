@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>AuraPlayer</AssemblyName>
+    <RootNamespace>AuraStream</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <Product>AuraStream Player</Product>
+    <AssemblyTitle>AuraStream 4K</AssemblyTitle>
+    <Version>1.0.0</Version>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
+    <PackageReference Include="LibVLCSharp.Avalonia" Version="3.9.3" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" />
+  </ItemGroup>
+  <Target Name="CopyLibVlcNative" AfterTargets="Publish">
+    <PropertyGroup>
+      <LibVlcSrc>$(NuGetPackageRoot)videolan.libvlc.windows\3.0.21\build\x64</LibVlcSrc>
+    </PropertyGroup>
+    <ItemGroup>
+      <LibVlcDll Include="$(LibVlcSrc)\libvlc.dll" />
+      <LibVlcDll Include="$(LibVlcSrc)\libvlccore.dll" />
+      <LibVlcPlugins Include="$(LibVlcSrc)\plugins\**\*.*" />
+      <LibVlcLua Include="$(LibVlcSrc)\lua\**\*.*" />
+      <LibVlcHrtf Include="$(LibVlcSrc)\hrtfs\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(LibVlcDll)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LibVlcPlugins)" DestinationFolder="$(PublishDir)plugins\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LibVlcLua)" DestinationFolder="$(PublishDir)lua\%(RecursiveDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(LibVlcHrtf)" DestinationFolder="$(PublishDir)hrtfs\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

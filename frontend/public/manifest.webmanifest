@@ -1,0 +1,17 @@
+{
+  "name": "AuraStream - Streaming Universal",
+  "short_name": "AuraStream",
+  "description": "Streaming em alta definição com TMDB, HLS e Cloudflare R2",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#141414",
+  "theme_color": "#E50914",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
